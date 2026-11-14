@@ -23,6 +23,7 @@ jobs:
 
       - name: Build app
         run: |
+          set -o pipefail
           xcodegen generate
           xcodebuild -project Wakeful.xcodeproj -scheme Wakeful -configuration Debug \
             -derivedDataPath build/DerivedData build | tail -20

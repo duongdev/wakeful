@@ -1,10 +1,16 @@
 import AppKit
+import Sparkle
 import UserNotifications
 import WakefulCore
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let defaults = UserDefaults.standard
+    #if DEBUG
+    let updater = SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: nil, userDriverDelegate: nil)
+    #else
+    let updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    #endif
     private lazy var session = Session(assertion: PowerAssertion())
     private var statusItem: StatusItemController?
     private var powerMonitor: PowerSourceMonitor?

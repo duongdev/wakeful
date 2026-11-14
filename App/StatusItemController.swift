@@ -1,4 +1,5 @@
 import AppKit
+import Sparkle
 import WakefulCore
 
 @MainActor
@@ -75,6 +76,9 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.removeAllItems()
         let active = delegate.isActive
 
+        #if DEBUG
+        menu.addItem(.sectionHeader(title: "Wakeful Dev"))
+        #endif
         menu.addItem(.sectionHeader(title: statusText()))
         if active { menu.addItem(action(String(localized: "Turn Off"), #selector(turnOff))) }
         menu.addItem(.separator())
@@ -102,6 +106,9 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.addItem(.separator())
 
         menu.addItem(action(String(localized: "Settings…"), #selector(openSettings), key: ","))
+        let updates = NSMenuItem(title: String(localized: "Check for Updates…"), action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)), keyEquivalent: "")
+        updates.target = delegate.updater
+        menu.addItem(updates)
         let help = NSMenuItem(title: String(localized: "Help"), action: nil, keyEquivalent: "")
         help.submenu = helpMenu()
         menu.addItem(help)
