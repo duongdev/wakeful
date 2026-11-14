@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Shortcuts actions: Turn On (with a duration or end time), Turn Off, Toggle, Is Wakeful On, Get Time Left, and Change Time. Siri phrases for turn on, turn off and toggle.
+- Global keyboard shortcut to turn on or off, set in Settings.
+- Keep awake until a time of day: Until a Time… in the menu, `until=18:00` in the URL scheme, and End Time in Shortcuts.
+- `wakeful` command-line tool in `Wakeful.app/Contents/Helpers`: `on`, `off`, `toggle`, `status`.
+- `wakeful://activate?indefinitely` to turn on with no end time, whatever the default duration is.
+- The time left is read out by VoiceOver when it shows next to the icon.
+
 ### Fixed
 
 - Menu bar icon spacing: the icon no longer sits too close to the icon on its right, with or without the time left shown.

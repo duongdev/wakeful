@@ -21,12 +21,14 @@
 
 ## Features
 
-- Turn on for a set time (10 minutes to 12 hours), a custom time, or until you turn it off.
+- Turn on for a set time (10 minutes to 12 hours), a custom length, until a time of day, or until you turn it off.
 - Choose whether the display may sleep while the Mac stays awake.
 - When the screen is locked, let the display sleep or let the Mac sleep, if you want.
 - Stop when you unplug the charger, if you want.
 - Start at login, start a session at launch, and get a notice when a session ends.
-- Control it from scripts with the `wakeful://` URL scheme.
+- Left-click the icon to turn on or off, if you want. Right-click then opens the menu.
+- A global keyboard shortcut to turn on or off.
+- Shortcuts actions, a `wakeful` command-line tool, and a `wakeful://` URL scheme for automation.
 - Show the time left next to the menu bar icon, if you want.
 - Automatic updates, which you can turn off.
 - No tracking. No network access except update checks.
@@ -41,17 +43,58 @@ Download `Wakeful-<version>.dmg` from the [latest release](https://github.com/du
 
 A Homebrew cask is coming.
 
+## Shortcuts
+
+Wakeful adds these actions to the Shortcuts app:
+
+| Action | Does |
+| --- | --- |
+| Turn On Wakeful | Turns on, with an optional duration or end time. |
+| Turn Off Wakeful | Turns off. |
+| Toggle Wakeful | Turns on or off, with an optional duration. Returns the new state. |
+| Is Wakeful On | Returns true or false. |
+| Get Wakeful Time Left | Returns the time left. Returns nothing when off or on with no end time. |
+| Change Wakeful Time | Adds time, or removes it with a negative value. |
+
+With Siri, say "Turn on Wakeful", "Turn off Wakeful" or "Toggle Wakeful".
+
+## Command line
+
+The `wakeful` tool is inside the app. To use it from Terminal, link it into your `PATH`:
+
+```bash
+sudo mkdir -p /usr/local/bin
+```
+
+```bash
+sudo ln -sf /Applications/Wakeful.app/Contents/Helpers/wakeful /usr/local/bin/wakeful
+```
+
+```bash
+wakeful on              # your default duration
+wakeful on 45m          # also 2h, 1.5h, 1h30m, 90s, or a number of minutes
+wakeful on until 18:00  # a past time means tomorrow
+wakeful on forever
+wakeful toggle
+wakeful off
+wakeful status          # for example: On, 1h 15m left (until 18:00)
+```
+
+The tool starts Wakeful if it is not running.
+
 ## URL scheme
 
 ```bash
 open -g 'wakeful://activate?hours=1.5'
 open -g 'wakeful://activate?minutes=30'
+open -g 'wakeful://activate?until=18:00'
+open -g 'wakeful://activate?indefinitely'
 open -g 'wakeful://toggle'
 open -g 'wakeful://deactivate'
 open 'wakeful://settings'
 ```
 
-With no duration, `activate` and `toggle` use your default duration.
+With no duration, `activate` and `toggle` use your default duration. `until` takes a 24-hour time; a past time means tomorrow.
 
 ## Build from source
 
