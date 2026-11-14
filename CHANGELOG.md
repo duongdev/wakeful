@@ -15,4 +15,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Menu: check mark on the running duration, Keep Display Awake toggle, Help menu (About, Release Notes, URL Scheme Help, Report a Bug).
 - Optional time left next to the menu bar icon.
 - App icon and menu bar icon.
-- Automatic updates and a Check for Updates menu item.
+- Automatic updates (can be turned off in Settings) and a Check for Updates menu item.

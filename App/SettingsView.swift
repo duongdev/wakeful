@@ -12,6 +12,8 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.dimIconWhenInactive) private var dimIconWhenInactive = DefaultSettings.dimIconWhenInactive
     @AppStorage(SettingsKey.notifyWhenSessionEnds) private var notifyWhenSessionEnds = DefaultSettings.notifyWhenSessionEnds
     @AppStorage(SettingsKey.showTimeLeftInMenuBar) private var showTimeLeftInMenuBar = DefaultSettings.showTimeLeftInMenuBar
+    // Sparkle reads this key from user defaults; Info.plist sets the default.
+    @AppStorage("SUEnableAutomaticChecks") private var automaticUpdates = true
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     var body: some View {
@@ -42,6 +44,7 @@ struct SettingsView: View {
                 }
                 Toggle("Dim the icon when off", isOn: $dimIconWhenInactive)
                 Toggle("Show time left next to the icon", isOn: $showTimeLeftInMenuBar)
+                Toggle("Check for updates automatically", isOn: $automaticUpdates)
             }
             Section("Advanced") {
                 HStack {

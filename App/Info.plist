@@ -29,6 +29,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
 	<key>SUFeedURL</key>
 	<string>https://github.com/duongdev/wakeful/releases/latest/download/appcast.xml</string>
 	<key>SUPublicEDKey</key>
