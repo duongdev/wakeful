@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- Menu bar icon spacing: the icon no longer sits too close to the icon on its right, with or without the time left shown.
+
 ## [0.1.0] - 2026-11-15
 
 ### Added
