@@ -72,18 +72,30 @@ struct SessionTests {
         #expect(fake.calls == [.display, .system])
     }
 
-    @Test func lockReleasesOnlyWhenAllowed() {
+    @Test func lockBehaviorControlsAssertionWhileLocked() {
         let session = Session(assertion: fake)
         session.activate(.minutes(30), now: t0)
         session.isScreenLocked = true
-        #expect(fake.current == .display)
+        #expect(fake.current == .display, "keepAwake is the default")
 
-        session.allowSleepWhileLocked = true
+        session.lockBehavior = .allowDisplaySleep
+        #expect(fake.current == .system)
+
+        session.lockBehavior = .allowSleep
         #expect(fake.current == nil)
-        #expect(session.isActive)
+        #expect(session.isActive, "the session keeps running while locked")
 
         session.isScreenLocked = false
         #expect(fake.current == .display)
+    }
+
+    @Test func allowDisplaySleepOnlyAppliesWhileLocked() {
+        let session = Session(assertion: fake, lockBehavior: .allowDisplaySleep)
+        session.activate(.indefinite, now: t0)
+        #expect(fake.current == .display)
+        session.isScreenLocked = true
+        session.isScreenLocked = false
+        #expect(fake.calls == [.display, .system, .display])
     }
 
     @Test func batteryEndsSessionOnlyOnSwitchAndWhenEnabled() {

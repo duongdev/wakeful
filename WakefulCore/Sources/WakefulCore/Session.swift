@@ -15,6 +15,16 @@ public protocol AssertionHolding: AnyObject {
     func set(_ kind: AssertionKind?)
 }
 
+/// What a session does while the screen is locked.
+public enum LockBehavior: String, CaseIterable, Sendable {
+    /// No change: keep the Mac (and the display, if set) awake.
+    case keepAwake
+    /// Let the display sleep; keep the Mac awake.
+    case allowDisplaySleep
+    /// Release the assertion; the Mac may sleep. The session keeps running.
+    case allowSleep
+}
+
 public enum EndReason: Equatable, Sendable {
     case user
     case expired
@@ -32,7 +42,7 @@ public final class Session {
     public private(set) var duration: SessionDuration?
 
     public var keepDisplayAwake: Bool { didSet { reconcile() } }
-    public var allowSleepWhileLocked: Bool { didSet { reconcile() } }
+    public var lockBehavior: LockBehavior { didSet { reconcile() } }
     public var deactivateOnBattery: Bool
 
     public var isScreenLocked = false { didSet { reconcile() } }
@@ -48,12 +58,12 @@ public final class Session {
     public init(
         assertion: AssertionHolding,
         keepDisplayAwake: Bool = DefaultSettings.keepDisplayAwake,
-        allowSleepWhileLocked: Bool = DefaultSettings.allowSleepWhileLocked,
+        lockBehavior: LockBehavior = DefaultSettings.lockBehavior,
         deactivateOnBattery: Bool = DefaultSettings.deactivateOnBattery
     ) {
         self.assertion = assertion
         self.keepDisplayAwake = keepDisplayAwake
-        self.allowSleepWhileLocked = allowSleepWhileLocked
+        self.lockBehavior = lockBehavior
         self.deactivateOnBattery = deactivateOnBattery
     }
 
@@ -100,9 +110,17 @@ public final class Session {
 
     /// Brings the held assertion in line with the state. Touches the assertion only when the needed kind changes.
     private func reconcile() {
+        let awake: AssertionKind = keepDisplayAwake ? .display : .system
         let needed: AssertionKind? =
-            if !isActive || (isScreenLocked && allowSleepWhileLocked) { nil }
-            else { keepDisplayAwake ? .display : .system }
+            if !isActive { nil }
+            else if !isScreenLocked { awake }
+            else {
+                switch lockBehavior {
+                case .keepAwake: awake
+                case .allowDisplaySleep: .system
+                case .allowSleep: nil
+                }
+            }
         guard needed != heldKind else { return }
         heldKind = needed
         assertion.set(needed)

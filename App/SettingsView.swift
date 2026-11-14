@@ -8,7 +8,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.toggleOnLeftClick) private var toggleOnLeftClick = DefaultSettings.toggleOnLeftClick
     @AppStorage(SettingsKey.activateAtLaunch) private var activateAtLaunch = DefaultSettings.activateAtLaunch
     @AppStorage(SettingsKey.deactivateOnBattery) private var deactivateOnBattery = DefaultSettings.deactivateOnBattery
-    @AppStorage(SettingsKey.allowSleepWhileLocked) private var allowSleepWhileLocked = DefaultSettings.allowSleepWhileLocked
+    @AppStorage(SettingsKey.lockBehavior) private var lockBehavior = DefaultSettings.lockBehavior
     @AppStorage(SettingsKey.dimIconWhenInactive) private var dimIconWhenInactive = DefaultSettings.dimIconWhenInactive
     @AppStorage(SettingsKey.notifyWhenSessionEnds) private var notifyWhenSessionEnds = DefaultSettings.notifyWhenSessionEnds
     @AppStorage(SettingsKey.showTimeLeftInMenuBar) private var showTimeLeftInMenuBar = DefaultSettings.showTimeLeftInMenuBar
@@ -23,7 +23,11 @@ struct SettingsView: View {
                     }
                 }
                 Toggle("Keep the display awake", isOn: $keepDisplayAwake)
-                Toggle("Allow sleep while the screen is locked", isOn: $allowSleepWhileLocked)
+                Picker("When the screen is locked", selection: $lockBehavior) {
+                    Text("Keep everything awake").tag(LockBehavior.keepAwake)
+                    Text("Let the display sleep").tag(LockBehavior.allowDisplaySleep)
+                    Text("Let the Mac sleep").tag(LockBehavior.allowSleep)
+                }
                 Toggle("Turn off when I unplug the charger", isOn: $deactivateOnBattery)
                 Toggle("Notify me when a session ends", isOn: $notifyWhenSessionEnds)
             }

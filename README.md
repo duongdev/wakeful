@@ -8,7 +8,8 @@ Keep your Mac awake from the menu bar.
 
 - Turn on for a set time (10 minutes to 12 hours), a custom time, or until you turn it off.
 - Choose whether the display may sleep while the Mac stays awake.
-- Stop when the screen is locked or when you unplug the charger, if you want.
+- When the screen is locked, let the display sleep or let the Mac sleep, if you want.
+- Stop when you unplug the charger, if you want.
 - Start at login, start a session at launch, and get a notice when a session ends.
 - Control it from scripts with the `wakeful://` URL scheme.
 - No tracking. No network access except update checks.

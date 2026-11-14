@@ -75,7 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func applySettings() {
         session.keepDisplayAwake = defaults.bool(forKey: SettingsKey.keepDisplayAwake)
-        session.allowSleepWhileLocked = defaults.bool(forKey: SettingsKey.allowSleepWhileLocked)
+        session.lockBehavior = LockBehavior(rawValue: defaults.string(forKey: SettingsKey.lockBehavior) ?? "") ?? DefaultSettings.lockBehavior
         session.deactivateOnBattery = defaults.bool(forKey: SettingsKey.deactivateOnBattery)
         statusItem?.refresh()
     }

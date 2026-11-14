@@ -5,7 +5,7 @@ public enum DefaultSettings {
     public static let toggleOnLeftClick = false
     public static let activateAtLaunch = false
     public static let deactivateOnBattery = false
-    public static let allowSleepWhileLocked = false
+    public static let lockBehavior = LockBehavior.keepAwake
     public static let dimIconWhenInactive = false
     public static let notifyWhenSessionEnds = true
     public static let showTimeLeftInMenuBar = false
@@ -17,7 +17,7 @@ public enum DefaultSettings {
         SettingsKey.toggleOnLeftClick: toggleOnLeftClick,
         SettingsKey.activateAtLaunch: activateAtLaunch,
         SettingsKey.deactivateOnBattery: deactivateOnBattery,
-        SettingsKey.allowSleepWhileLocked: allowSleepWhileLocked,
+        SettingsKey.lockBehavior: lockBehavior.rawValue,
         SettingsKey.dimIconWhenInactive: dimIconWhenInactive,
         SettingsKey.notifyWhenSessionEnds: notifyWhenSessionEnds,
         SettingsKey.showTimeLeftInMenuBar: showTimeLeftInMenuBar,
@@ -31,7 +31,7 @@ public enum SettingsKey {
     public static let toggleOnLeftClick = "toggleOnLeftClick"
     public static let activateAtLaunch = "activateAtLaunch"
     public static let deactivateOnBattery = "deactivateOnBattery"
-    public static let allowSleepWhileLocked = "allowSleepWhileLocked"
+    public static let lockBehavior = "lockBehavior"
     public static let dimIconWhenInactive = "dimIconWhenInactive"
     public static let notifyWhenSessionEnds = "notifyWhenSessionEnds"
     public static let showTimeLeftInMenuBar = "showTimeLeftInMenuBar"

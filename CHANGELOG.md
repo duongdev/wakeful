@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Menu bar app that keeps the Mac awake for a preset or custom time, or until turned off.
-- Settings: default duration, display sleep, sleep while locked, turn off on unplug, notification at session end, launch at login, turn on at launch, left-click toggle, dim icon.
+- Settings: default duration, display sleep, what to do while the screen is locked (keep awake, let the display sleep, or let the Mac sleep), turn off on unplug, notification at session end, launch at login, turn on at launch, left-click toggle, dim icon.
 - `wakeful://` URL scheme: `activate`, `deactivate`, `toggle`, `settings`.
 - Log viewer with copy, clear and reveal in Finder.
 - Menu: check mark on the running duration, Keep Display Awake toggle, Help menu (About, Release Notes, URL Scheme Help, Report a Bug).
