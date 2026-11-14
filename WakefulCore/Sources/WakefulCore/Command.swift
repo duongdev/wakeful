@@ -8,13 +8,14 @@ public enum Command: Equatable, Sendable {
     case toggle(SessionDuration?)
     case openSettings
 
-    public static let urlScheme = "wakeful"
+    /// `wakeful-dev` is the Debug build's scheme, so it does not take links meant for the installed app.
+    public static let urlSchemes: Set = ["wakeful", "wakeful-dev"]
 
     /// Parses `wakeful://activate?hours=1.5&minutes=10`, `wakeful://deactivate`, `wakeful://toggle?minutes=30`,
     /// `wakeful://settings`.
     /// Returns nil for an unknown action or an invalid duration.
     public init?(url: URL) {
-        guard url.scheme?.lowercased() == Self.urlScheme,
+        guard let scheme = url.scheme?.lowercased(), Self.urlSchemes.contains(scheme),
               let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
         // Accept both `wakeful://activate` (host) and `wakeful:activate` (path).
         let action = (components.host ?? components.path).lowercased()

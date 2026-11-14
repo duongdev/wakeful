@@ -12,6 +12,8 @@ struct CommandTests {
         #expect(parse("wakeful://settings") == .openSettings)
         #expect(parse("wakeful:activate") == .activate(nil))
         #expect(parse("WAKEFUL://Activate") == .activate(nil))
+        #expect(parse("wakeful-dev://activate") == .activate(nil))
+        #expect(parse("other://activate") == nil)
     }
 
     @Test func parsesDurations() {

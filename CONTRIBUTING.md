@@ -18,6 +18,8 @@ open Wakeful.xcodeproj
 
 The Xcode project is generated from `project.yml` and is not committed. Run `xcodegen generate` again after you pull changes to `project.yml`.
 
+Debug builds are "Wakeful Dev" (`dev.duongdev.Wakeful.debug`, URL scheme `wakeful-dev://`) with updates off, so they can run next to an installed copy. Both copies write to the same log folder.
+
 Run the core tests without Xcode:
 
 ```bash

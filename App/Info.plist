@@ -20,14 +20,18 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>dev.duongdev.Wakeful</string>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>wakeful</string>
+				<string>$(WAKEFUL_URL_SCHEME)</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>SUFeedURL</key>
+	<string>https://github.com/duongdev/wakeful/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>ZDZLYT/r/B0hdmqkaXwvoNPLSzLHf+baviqeVhwXaUU=</string>
 </dict>
 </plist>

@@ -20,6 +20,9 @@ settings:
 packages:
   WakefulCore:
     path: WakefulCore
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: 2.10.0
 
 targets:
   Wakeful:
@@ -29,9 +32,11 @@ targets:
       - App
     dependencies:
       - package: WakefulCore
+      - package: Sparkle
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.duongdev.Wakeful
+        WAKEFUL_URL_SCHEME: wakeful
         PRODUCT_NAME: Wakeful
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
@@ -40,9 +45,17 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright © 2026 Dustin Do. MIT License."
         INFOPLIST_FILE: App/Info.plist
+      # Debug builds get their own identity, so they do not share settings, links or login items with an installed copy.
+      configs:
+        Debug:
+          PRODUCT_BUNDLE_IDENTIFIER: dev.duongdev.Wakeful.debug
+          INFOPLIST_KEY_CFBundleDisplayName: Wakeful Dev
+          WAKEFUL_URL_SCHEME: wakeful-dev
     info:
       path: App/Info.plist
       properties:
         CFBundleURLTypes:
-          - CFBundleURLName: dev.duongdev.Wakeful
-            CFBundleURLSchemes: [wakeful]
+          - CFBundleURLName: $(PRODUCT_BUNDLE_IDENTIFIER)
+            CFBundleURLSchemes: [$(WAKEFUL_URL_SCHEME)]
+        SUFeedURL: https://github.com/duongdev/wakeful/releases/latest/download/appcast.xml
+        SUPublicEDKey: ZDZLYT/r/B0hdmqkaXwvoNPLSzLHf+baviqeVhwXaUU=
