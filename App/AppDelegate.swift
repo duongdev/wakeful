@@ -1,10 +1,14 @@
 import AppKit
+import KeyboardShortcuts
 import Sparkle
 import UserNotifications
 import WakefulCore
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    /// For Shortcuts intents, which the system runs in this process.
+    private(set) static weak var shared: AppDelegate?
+
     private let defaults = UserDefaults.standard
     #if DEBUG
     let updater = SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: nil, userDriverDelegate: nil)
@@ -17,6 +21,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var lockMonitor: ScreenLockMonitor?
     private var deadlineTask: Task<Void, Never>?
     private var napGuard: NSObjectProtocol?
+
+    override init() {
+        super.init()
+        Self.shared = self
+    }
 
     var defaultDuration: SessionDuration { SessionDuration(storedValue: defaults.double(forKey: SettingsKey.defaultDuration)) }
 
@@ -40,6 +49,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ) { [weak self] _ in MainActor.assumeIsolated { self?.applySettings() } }
 
         statusItem = StatusItemController(delegate: self)
+        publishState()
+        KeyboardShortcuts.onKeyUp(for: .toggleWakeful) { [weak self] in self?.toggle() }
         if defaults.bool(forKey: SettingsKey.activateAtLaunch) { activate(nil) }
     }
 
@@ -57,7 +68,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             switch command {
             case .activate(let duration): activate(duration)
             case .deactivate: deactivate()
-            case .toggle(let duration): session.toggle(duration ?? defaultDuration, now: .now)
+            case .toggle(let duration): toggle(duration)
             case .openSettings: WindowPresenter.shared.showSettings()
             }
         }
@@ -75,7 +86,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func deactivate() { session.deactivate() }
 
-    func toggle() { session.toggle(defaultDuration, now: .now) }
+    func toggle(_ duration: SessionDuration? = nil) { session.toggle(duration ?? defaultDuration, now: .now) }
+
+    func adjust(by seconds: TimeInterval) -> Bool { session.adjust(by: seconds, now: .now) }
+
+    var remaining: Duration? { session.remaining(now: .now) }
 
     // MARK: Private
 
@@ -90,6 +105,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let remaining = session.remaining(now: .now).map { "\(Int($0.components.seconds))s" } ?? "indefinite"
         Log.shared.info(session.isActive ? "Session active: \(remaining)" : "Session ended")
         statusItem?.refresh()
+        publishState()
         deadlineTask?.cancel()
         if let napGuard { ProcessInfo.processInfo.endActivity(napGuard) }
         napGuard = nil
@@ -105,6 +121,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if defaults.bool(forKey: SettingsKey.notifyWhenSessionEnds) {
             UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
         }
+    }
+
+    /// For `wakeful status`.
+    private func publishState() {
+        defaults.set(session.isActive, forKey: StateKey.isActive)
+        let endsAt = session.remaining(now: .now).map { left in
+            let end = Date.now.addingTimeInterval(Double(left.components.seconds) + Double(left.components.attoseconds) / 1e18)
+            return Date(timeIntervalSinceReferenceDate: end.timeIntervalSinceReferenceDate.rounded())
+        }
+        defaults.set(endsAt, forKey: StateKey.endsAt)
+        defaults.set(Date.now, forKey: StateKey.updatedAt)
     }
 
     private func sessionEnded(_ reason: EndReason) {
@@ -126,4 +153,8 @@ extension Bundle {
         let build = infoDictionary?["CFBundleVersion"] as? String ?? "?"
         return "\(version) (\(build))"
     }
+}
+
+extension KeyboardShortcuts.Name {
+    static let toggleWakeful = Self("toggleWakeful")
 }

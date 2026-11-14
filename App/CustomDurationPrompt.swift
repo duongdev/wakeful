@@ -23,6 +23,30 @@ enum CustomDurationPrompt {
         return total > 0 ? .seconds(total) : nil
     }
 
+    /// Asks for a time of day. Returns the time until then; a past time means tomorrow. Nil if the user cancels.
+    static func runUntil() -> SessionDuration? {
+        let alert = NSAlert()
+        alert.messageText = String(localized: "Keep Awake Until")
+        alert.informativeText = String(localized: "A time that has passed today means tomorrow.")
+        alert.addButton(withTitle: String(localized: "Start"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
+
+        let picker = NSDatePicker()
+        picker.datePickerStyle = .textFieldAndStepper
+        picker.datePickerElements = .hourMinute
+        let calendar = Calendar.current
+        let nextHour = calendar.nextDate(after: .now, matching: DateComponents(minute: 0), matchingPolicy: .nextTime)
+        picker.dateValue = nextHour ?? .now
+        picker.sizeToFit()
+        alert.accessoryView = picker
+        alert.window.initialFirstResponder = picker
+
+        NSApp.activate()
+        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        let time = calendar.dateComponents([.hour, .minute], from: picker.dateValue)
+        return SessionDuration.until(hour: time.hour ?? 0, minute: time.minute ?? 0, now: .now, calendar: calendar)
+    }
+
     private static func field(placeholder: String) -> NSTextField {
         let field = NSTextField()
         field.placeholderString = placeholder

@@ -90,6 +90,23 @@ public final class Session {
         if isActive { deactivate() } else { activate(duration, now: now) }
     }
 
+    /// Adds (or with a negative value, removes) time from a timed session.
+    /// Returns false when off or indefinite. Removing more than is left turns the session off.
+    @discardableResult
+    public func adjust(by seconds: TimeInterval, now: ContinuousClock.Instant) -> Bool {
+        guard isActive, let endsAt else { return false }
+        let newEnd = endsAt.advanced(by: .seconds(seconds))
+        guard newEnd > now else {
+            deactivate()
+            return true
+        }
+        self.endsAt = newEnd
+        let left = now.duration(to: newEnd).components
+        duration = .seconds(Double(left.seconds) + Double(left.attoseconds) / 1e18)
+        onChange?()
+        return true
+    }
+
     public func remaining(now: ContinuousClock.Instant) -> Duration? {
         endsAt.map { max(.zero, now.duration(to: $0)) }
     }

@@ -29,6 +29,34 @@ struct SessionTests {
         #expect(session.isActive)
     }
 
+    @Test func adjustMovesTheDeadline() {
+        let session = Session(assertion: fake)
+        session.activate(.minutes(30), now: t0)
+        #expect(session.adjust(by: 600, now: t0))
+        #expect(session.remaining(now: t0) == .seconds(2400))
+        #expect(session.adjust(by: -1200, now: t0.advanced(by: .seconds(100))))
+        #expect(session.remaining(now: t0.advanced(by: .seconds(100))) == .seconds(1100))
+        #expect(session.duration == .seconds(1100))
+    }
+
+    @Test func adjustPastTheEndTurnsOff() {
+        let session = Session(assertion: fake)
+        var reasons: [EndReason] = []
+        session.onEnd = { reasons.append($0) }
+        session.activate(.minutes(5), now: t0)
+        #expect(session.adjust(by: -300, now: t0))
+        #expect(!session.isActive)
+        #expect(reasons == [.user])
+    }
+
+    @Test func adjustFailsWhenOffOrIndefinite() {
+        let session = Session(assertion: fake)
+        #expect(!session.adjust(by: 60, now: t0))
+        session.activate(.indefinite, now: t0)
+        #expect(!session.adjust(by: 60, now: t0))
+        #expect(session.endsAt == nil)
+    }
+
     @Test func reactivatingReplacesDurationAndKeepsAssertion() {
         let session = Session(assertion: fake)
         session.activate(.hours(2), now: t0)

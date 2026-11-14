@@ -8,8 +8,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "0.2.0"
+    CURRENT_PROJECT_VERSION: "2"
     # Local builds are ad-hoc signed. Release builds override signing.
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
@@ -23,6 +23,9 @@ packages:
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
     from: 2.10.0
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts
+    from: 3.1.0
 
 targets:
   Wakeful:
@@ -33,6 +36,14 @@ targets:
     dependencies:
       - package: WakefulCore
       - package: Sparkle
+      - package: KeyboardShortcuts
+      # The command-line tool ships inside the app, in Contents/Helpers.
+      - target: wakeful-cli
+        embed: true
+        codeSign: true
+        copy:
+          destination: wrapper
+          subpath: Contents/Helpers
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.duongdev.Wakeful
@@ -60,3 +71,16 @@ targets:
         SUFeedURL: https://github.com/duongdev/wakeful/releases/latest/download/appcast.xml
         SUEnableAutomaticChecks: true
         SUPublicEDKey: ZDZLYT/r/B0hdmqkaXwvoNPLSzLHf+baviqeVhwXaUU=
+
+  wakeful-cli:
+    type: tool
+    platform: macOS
+    sources:
+      - CLI
+    dependencies:
+      - package: WakefulCore
+    settings:
+      base:
+        PRODUCT_NAME: wakeful
+        PRODUCT_BUNDLE_IDENTIFIER: dev.duongdev.Wakeful.cli
+        SKIP_INSTALL: YES

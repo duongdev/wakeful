@@ -18,7 +18,13 @@ open Wakeful.xcodeproj
 
 The Xcode project is generated from `project.yml` and is not committed. Run `xcodegen generate` again after you pull changes to `project.yml`.
 
-Debug builds are "Wakeful Dev" (`dev.duongdev.Wakeful.debug`, URL scheme `wakeful-dev://`) with updates off, so they can run next to an installed copy. Both copies write to the same log folder.
+Debug builds are "Wakeful Dev" (`dev.duongdev.Wakeful.debug`, URL scheme `wakeful-dev://`) with updates off, so they can run next to an installed copy. Both copies write to the same log folder. The Debug `wakeful` tool (`Wakeful.app/Contents/Helpers/wakeful`) controls the Debug app only.
+
+Shortcuts actions do not run on the ad-hoc signed Debug build ("couldn't communicate with the app"), because macOS needs a team ID. To test them, sign the build with your own certificate:
+
+```bash
+codesign --force --deep --options runtime --sign "Apple Development" build/DerivedData/Build/Products/Debug/Wakeful.app
+```
 
 Run the core tests without Xcode:
 
