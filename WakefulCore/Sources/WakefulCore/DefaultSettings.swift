@@ -1,3 +1,8 @@
+/// How the menu bar icon looks while Wakeful is on. Off always uses the plain icon.
+public enum ActiveIconStyle: String, CaseIterable, Sendable {
+    case standard, green, blue, greenDot, blueDot
+}
+
 /// First-launch defaults, in one place so they are easy to change after feedback.
 public enum DefaultSettings {
     public static let keepDisplayAwake = true
@@ -9,6 +14,7 @@ public enum DefaultSettings {
     public static let dimIconWhenInactive = false
     public static let notifyWhenSessionEnds = true
     public static let showTimeLeftInMenuBar = false
+    public static let activeIconStyle = ActiveIconStyle.standard
 
     /// For `UserDefaults.register(defaults:)`, so reads need no fallback.
     public static var registration: [String: Any] { [
@@ -21,6 +27,7 @@ public enum DefaultSettings {
         SettingsKey.dimIconWhenInactive: dimIconWhenInactive,
         SettingsKey.notifyWhenSessionEnds: notifyWhenSessionEnds,
         SettingsKey.showTimeLeftInMenuBar: showTimeLeftInMenuBar,
+        SettingsKey.activeIconStyle: activeIconStyle.rawValue,
     ] }
 }
 
@@ -35,6 +42,7 @@ public enum SettingsKey {
     public static let dimIconWhenInactive = "dimIconWhenInactive"
     public static let notifyWhenSessionEnds = "notifyWhenSessionEnds"
     public static let showTimeLeftInMenuBar = "showTimeLeftInMenuBar"
+    public static let activeIconStyle = "activeIconStyle"
 }
 
 /// `UserDefaults` keys the app writes so the command-line tool can read the state.
