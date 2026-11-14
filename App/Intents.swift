@@ -36,6 +36,26 @@ private func sessionDuration(_ duration: Measurement<UnitDuration>?, until: Date
     }
 }
 
+enum DisplaySleepChoice: String, AppEnum {
+    case useSetting, keepAwake, allowSleep
+
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Display"
+    static let caseDisplayRepresentations: [DisplaySleepChoice: DisplayRepresentation] = [
+        .useSetting: "Use Wakeful Setting",
+        .keepAwake: "Keep Display Awake",
+        .allowSleep: "Let Display Sleep",
+    ]
+
+    /// The per-session override, or nil for the setting.
+    var keepDisplayAwake: Bool? {
+        switch self {
+        case .useSetting: nil
+        case .keepAwake: true
+        case .allowSleep: false
+        }
+    }
+}
+
 struct TurnOnIntent: AppIntent {
     static let title: LocalizedStringResource = "Turn On Wakeful"
     static let description = IntentDescription(
@@ -47,9 +67,12 @@ struct TurnOnIntent: AppIntent {
     @Parameter(title: "End Time", description: "A past time today means tomorrow.", kind: .time)
     var until: Date?
 
+    @Parameter(title: "Display", description: "For this session only.", default: .useSetting)
+    var display: DisplaySleepChoice
+
     @MainActor
     func perform() async throws -> some IntentResult {
-        try app().activate(sessionDuration(duration, until: until))
+        try app().activate(sessionDuration(duration, until: until), keepDisplayAwake: display.keepDisplayAwake)
         return .result()
     }
 }
@@ -73,10 +96,13 @@ struct ToggleIntent: AppIntent {
     @Parameter(title: "Duration", defaultUnit: .minutes, supportsNegativeNumbers: false)
     var duration: Measurement<UnitDuration>?
 
+    @Parameter(title: "Display", description: "For this session only, when it turns on.", default: .useSetting)
+    var display: DisplaySleepChoice
+
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<Bool> {
         let app = try app()
-        app.toggle(try sessionDuration(duration, until: nil))
+        app.toggle(try sessionDuration(duration, until: nil), keepDisplayAwake: display.keepDisplayAwake)
         return .result(value: app.isActive)
     }
 }

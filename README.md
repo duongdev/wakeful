@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src=".github/assets/menu.png" width="254" alt="Wakeful menu">
+  <img src=".github/assets/menu.png" width="256" alt="Wakeful menu">
   &nbsp;&nbsp;
   <img src=".github/assets/settings.png" width="368" alt="Wakeful settings">
 </p>
@@ -29,8 +29,9 @@
 - Left-click the icon to turn on or off, if you want. Right-click then opens the menu.
 - A global keyboard shortcut to turn on or off.
 - Shortcuts actions, a `wakeful` command-line tool, and a `wakeful://` URL scheme for automation.
-- Show the time left next to the menu bar icon, if you want.
+- Show the time left next to the menu bar icon, if you want. Color the icon or add a dot while on, if you want.
 - Automatic updates, which you can turn off.
+- In English, Vietnamese, Spanish, French, German, Italian, Portuguese (Brazil), Russian, Japanese, Korean, and Chinese (Simplified and Traditional). Wakeful follows your Mac's language; to choose another, use Settings › General › Language.
 - No tracking. No network access except update checks.
 
 ## Requirements
@@ -49,9 +50,9 @@ Wakeful adds these actions to the Shortcuts app:
 
 | Action | Does |
 | --- | --- |
-| Turn On Wakeful | Turns on, with an optional duration or end time. |
+| Turn On Wakeful | Turns on, with an optional duration or end time, and an optional display choice for that session. |
 | Turn Off Wakeful | Turns off. |
-| Toggle Wakeful | Turns on or off, with an optional duration. Returns the new state. |
+| Toggle Wakeful | Turns on or off, with an optional duration and display choice. Returns the new state. |
 | Is Wakeful On | Returns true or false. |
 | Get Wakeful Time Left | Returns the time left. Returns nothing when off or on with no end time. |
 | Change Wakeful Time | Adds time, or removes it with a negative value. |

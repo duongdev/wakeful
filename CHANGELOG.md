@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Icon when on: Standard, Green, Blue, Green Dot or Blue Dot, in Settings.
+- Display choice in the Turn On and Toggle Shortcuts actions: keep the display awake or let it sleep for that session only.
+- Translations: Vietnamese, Spanish, French, German, Italian, Portuguese (Brazil), Russian, Japanese, Korean, and Chinese (Simplified and Traditional).
+- Language setting in Settings › General, to use Wakeful in a language other than the system's. It is the same per-app language as System Settings › General › Language & Region › Applications.
+
+### Fixed
+
+- After wake or a user switch, Wakeful checks that macOS still has its keep-awake request and makes it again if not.
+
 ## [0.2.0] - 2026-11-15
 
 ### Added

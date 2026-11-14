@@ -12,7 +12,8 @@ enum CustomDurationPrompt {
 
         let hours = field(placeholder: String(localized: "Hours"))
         let minutes = field(placeholder: String(localized: "Minutes"))
-        let stack = NSStackView(views: [hours, NSTextField(labelWithString: "h"), minutes, NSTextField(labelWithString: "min")])
+        let stack = NSStackView(views: [hours, NSTextField(labelWithString: String(localized: "h", comment: "Short for hours")), minutes,
+                                    NSTextField(labelWithString: String(localized: "min", comment: "Short for minutes"))])
         stack.frame = NSRect(x: 0, y: 0, width: 220, height: 24)
         alert.accessoryView = stack
         alert.window.initialFirstResponder = hours

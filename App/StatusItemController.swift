@@ -48,7 +48,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             countdownTimer?.invalidate()
             countdownTimer = nil
         }
-        item.button?.image = Self.menuBarImage(active: active, timeLeft: timeLeft)
+        let style = active
+            ? ActiveIconStyle(rawValue: defaults.string(forKey: SettingsKey.activeIconStyle) ?? "") ?? DefaultSettings.activeIconStyle
+            : .standard
+        item.button?.image = Self.menuBarImage(active: active, timeLeft: timeLeft, style: style)
         let label = switch (active, timeLeft) {
         case (false, _): String(localized: "Wakeful: off")
         case (true, nil): String(localized: "Wakeful: on")
@@ -60,31 +63,69 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     /// The time left is drawn into the image, not set as the button title: a titled status
     /// button gets 2 pt more padding at each end than an image-only one, which pushes the icon
     /// away from its neighbors.
-    private static func menuBarImage(active: Bool, timeLeft: String?) -> NSImage? {
+    ///
+    /// The standard style is a template image, so the system tints it. The colored styles cannot be
+    /// templates; they draw the parts that follow the menu bar in `labelColor`, which resolves for the
+    /// menu bar's appearance when the image draws.
+    private static func menuBarImage(active: Bool, timeLeft: String?, style: ActiveIconStyle) -> NSImage? {
         guard let glyph = NSImage(named: active ? "MenuBarActive" : "MenuBarInactive") else { return nil }
         // 16 pt glyph on an 18 pt wide canvas, placed so the cup and handle (not the thin
         // saucer tip) are centered. The clear sides match the inner margin of other icons.
         let glyphSize = NSSize(width: 18, height: 16)
         glyph.size = glyphSize
-        guard let timeLeft else { return glyph }
+        if style == .standard && timeLeft == nil { return glyph }
 
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular),
         ]
-        let textSize = (timeLeft as NSString).size(withAttributes: attributes)
-        let gap: CGFloat = 4
+        let textSize = timeLeft.map { ($0 as NSString).size(withAttributes: attributes) } ?? .zero
+        let gap: CGFloat = timeLeft == nil ? 0 : 4
         let size = NSSize(
             width: glyphSize.width + gap + ceil(textSize.width),
             height: max(glyphSize.height, ceil(textSize.height)))
+        let accent: NSColor? = switch style {
+        case .standard: nil
+        case .green, .greenDot: .systemGreen
+        case .blue, .blueDot: .systemBlue
+        }
         let image = NSImage(size: size, flipped: false) { _ in
-            glyph.draw(in: NSRect(origin: NSPoint(x: 0, y: (size.height - glyphSize.height) / 2), size: glyphSize))
-            (timeLeft as NSString).draw(
-                at: NSPoint(x: glyphSize.width + gap, y: (size.height - textSize.height) / 2),
-                withAttributes: attributes)
+            let glyphRect = NSRect(origin: NSPoint(x: 0, y: (size.height - glyphSize.height) / 2), size: glyphSize)
+            let ink: NSColor = switch style {
+            case .standard: .black
+            case .green, .blue: accent ?? .labelColor
+            case .greenDot, .blueDot: .labelColor
+            }
+            tinted(glyph, ink).draw(in: glyphRect)
+            if style == .greenDot || style == .blueDot, let accent {
+                // A badge dot at the top-right, with a clear ring so it stays apart from the handle.
+                let dot = NSRect(x: glyphRect.maxX - 5, y: glyphRect.maxY - 5, width: 5, height: 5)
+                NSGraphicsContext.current?.compositingOperation = .clear
+                NSBezierPath(ovalIn: dot.insetBy(dx: -1, dy: -1)).fill()
+                NSGraphicsContext.current?.compositingOperation = .sourceOver
+                accent.setFill()
+                NSBezierPath(ovalIn: dot).fill()
+            }
+            if let timeLeft {
+                var textAttributes = attributes
+                textAttributes[.foregroundColor] = style == .standard ? NSColor.black : NSColor.labelColor
+                (timeLeft as NSString).draw(
+                    at: NSPoint(x: glyphSize.width + gap, y: (size.height - textSize.height) / 2),
+                    withAttributes: textAttributes)
+            }
             return true
         }
-        image.isTemplate = true
+        image.isTemplate = style == .standard
         return image
+    }
+
+    /// The glyph's shape filled with one color.
+    private static func tinted(_ glyph: NSImage, _ color: NSColor) -> NSImage {
+        NSImage(size: glyph.size, flipped: false) { rect in
+            glyph.draw(in: rect)
+            color.set()
+            rect.fill(using: .sourceAtop)
+            return true
+        }
     }
 
     // MARK: Clicks
@@ -132,7 +173,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.addItem(.separator())
 
         let display = action(String(localized: "Keep Display Awake"), #selector(toggleDisplayAwake))
-        display.state = defaults.bool(forKey: SettingsKey.keepDisplayAwake) ? .on : .off
+        display.state = delegate.keepsDisplayAwake ? .on : .off
         menu.addItem(display)
         menu.addItem(.separator())
 
@@ -187,8 +228,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     }
 
     @objc private func toggleDisplayAwake() {
-        let current = defaults.bool(forKey: SettingsKey.keepDisplayAwake)
-        defaults.set(!current, forKey: SettingsKey.keepDisplayAwake)
+        delegate.setKeepDisplayAwake(!delegate.keepsDisplayAwake)
     }
 
     @objc private func openSettings() { WindowPresenter.shared.showSettings() }

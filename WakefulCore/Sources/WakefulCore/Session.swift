@@ -41,7 +41,18 @@ public final class Session {
     /// The duration the running session was started (or last changed) with. Nil while inactive.
     public private(set) var duration: SessionDuration?
 
-    public var keepDisplayAwake: Bool { didSet { reconcile() } }
+    /// The setting. A session can override it; see `keepsDisplayAwake`.
+    public var keepDisplayAwake: Bool {
+        didSet {
+            if keepDisplayAwake != oldValue { displayOverride = nil }
+            reconcile()
+        }
+    }
+    /// A display-sleep choice for this session only (from Shortcuts). Cleared when the session ends
+    /// or when the setting changes.
+    private var displayOverride: Bool?
+    /// Whether the running session keeps the display awake: its own choice, or else the setting.
+    public var keepsDisplayAwake: Bool { displayOverride ?? keepDisplayAwake }
     public var lockBehavior: LockBehavior { didSet { reconcile() } }
     public var deactivateOnBattery: Bool
 
@@ -67,8 +78,11 @@ public final class Session {
         self.deactivateOnBattery = deactivateOnBattery
     }
 
-    /// Starts a session, or replaces the duration of the running one.
-    public func activate(_ duration: SessionDuration, now: ContinuousClock.Instant) {
+    /// Starts a session, or replaces the duration of the running one. `keepDisplayAwake` overrides
+    /// the setting for this session. Nil uses the setting for a new session and keeps the running
+    /// session's choice, so changing the duration does not change the display.
+    public func activate(_ duration: SessionDuration, now: ContinuousClock.Instant, keepDisplayAwake: Bool? = nil) {
+        if keepDisplayAwake != nil || !isActive { displayOverride = keepDisplayAwake }
         isActive = true
         self.duration = duration
         endsAt = duration.timeInterval.map { now.advanced(by: .seconds($0)) }
@@ -81,13 +95,20 @@ public final class Session {
         isActive = false
         endsAt = nil
         duration = nil
+        displayOverride = nil
         reconcile()
         onChange?()
         onEnd?(reason)
     }
 
-    public func toggle(_ duration: SessionDuration, now: ContinuousClock.Instant) {
-        if isActive { deactivate() } else { activate(duration, now: now) }
+    /// Drops this session's display choice, so the setting applies again.
+    public func clearDisplayOverride() {
+        displayOverride = nil
+        reconcile()
+    }
+
+    public func toggle(_ duration: SessionDuration, now: ContinuousClock.Instant, keepDisplayAwake: Bool? = nil) {
+        if isActive { deactivate() } else { activate(duration, now: now, keepDisplayAwake: keepDisplayAwake) }
     }
 
     /// Adds (or with a negative value, removes) time from a timed session.
@@ -127,7 +148,7 @@ public final class Session {
 
     /// Brings the held assertion in line with the state. Touches the assertion only when the needed kind changes.
     private func reconcile() {
-        let awake: AssertionKind = keepDisplayAwake ? .display : .system
+        let awake: AssertionKind = keepsDisplayAwake ? .display : .system
         let needed: AssertionKind? =
             if !isActive { nil }
             else if !isScreenLocked { awake }

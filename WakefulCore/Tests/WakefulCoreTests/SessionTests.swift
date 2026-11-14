@@ -29,6 +29,43 @@ struct SessionTests {
         #expect(session.isActive)
     }
 
+    @Test func displayOverrideAppliesToTheSession() {
+        let session = Session(assertion: fake, keepDisplayAwake: true)
+        session.activate(.hours(1), now: t0, keepDisplayAwake: false)
+        #expect(fake.current == .system)
+        #expect(!session.keepsDisplayAwake)
+        session.activate(.hours(2), now: t0)
+        #expect(fake.current == .system, "changing the duration keeps the session's choice")
+        session.activate(.hours(2), now: t0, keepDisplayAwake: true)
+        #expect(fake.current == .display, "a new choice replaces it")
+    }
+
+    @Test func displayOverrideEndsWithTheSession() {
+        let session = Session(assertion: fake, keepDisplayAwake: false)
+        session.activate(.indefinite, now: t0, keepDisplayAwake: true)
+        #expect(fake.current == .display)
+        session.deactivate()
+        session.activate(.indefinite, now: t0)
+        #expect(fake.current == .system)
+    }
+
+    @Test func displayOverrideYieldsToASettingChange() {
+        let session = Session(assertion: fake, keepDisplayAwake: true)
+        session.activate(.indefinite, now: t0, keepDisplayAwake: false)
+        session.keepDisplayAwake = true
+        #expect(fake.current == .system, "setting the same value is not a change")
+        session.keepDisplayAwake = false
+        session.keepDisplayAwake = true
+        #expect(fake.current == .display)
+    }
+
+    @Test func displayOverrideStillFollowsLockBehavior() {
+        let session = Session(assertion: fake, keepDisplayAwake: false, lockBehavior: .allowSleep)
+        session.activate(.indefinite, now: t0, keepDisplayAwake: true)
+        session.isScreenLocked = true
+        #expect(fake.current == nil)
+    }
+
     @Test func adjustMovesTheDeadline() {
         let session = Session(assertion: fake)
         session.activate(.minutes(30), now: t0)
