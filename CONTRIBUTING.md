@@ -9,7 +9,7 @@ Thanks for helping. Bug reports, ideas and pull requests are welcome.
 
 ## Build
 
-Requirements: Xcode 16 or later, macOS 14 or later, and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
+Requirements: Xcode 26 or later (for the `.icon` app icon), macOS 14 or later, and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
 
 ```bash
 xcodegen generate

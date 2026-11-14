@@ -28,6 +28,7 @@ open -g 'wakeful://activate?hours=1.5'
 open -g 'wakeful://activate?minutes=30'
 open -g 'wakeful://toggle'
 open -g 'wakeful://deactivate'
+open 'wakeful://settings'
 ```
 
 With no duration, `activate` and `toggle` use your default duration.
