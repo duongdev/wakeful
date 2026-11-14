@@ -23,38 +23,68 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         item.button?.target = self
         item.button?.action = #selector(clicked)
         item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
-        item.button?.imagePosition = .imageLeading
+        item.button?.imagePosition = .imageOnly
         refresh()
     }
 
     func refresh() {
-        let active = delegate.isActive
-        let image = NSImage(named: active ? "MenuBarActive" : "MenuBarInactive")
-        // 16 pt square, centered: the same visual size as system menu bar icons.
-        image?.size = NSSize(width: 16, height: 16)
-        item.button?.image = image
-        item.button?.setAccessibilityLabel(active ? String(localized: "Wakeful: on") : String(localized: "Wakeful: off"))
-        item.button?.appearsDisabled = !active && defaults.bool(forKey: SettingsKey.dimIconWhenInactive)
+        item.button?.appearsDisabled = !delegate.isActive && defaults.bool(forKey: SettingsKey.dimIconWhenInactive)
         updateCountdown()
     }
 
-    // MARK: Countdown next to the icon
+    // MARK: Icon and countdown
 
     private func updateCountdown() {
-        let show = defaults.bool(forKey: SettingsKey.showTimeLeftInMenuBar)
-        guard show, let endsAt = delegate.endsAt else {
+        let active = delegate.isActive
+        var timeLeft: String?
+        if defaults.bool(forKey: SettingsKey.showTimeLeftInMenuBar), let endsAt = delegate.endsAt {
+            timeLeft = DurationText.short(ContinuousClock.now.duration(to: endsAt))
+            if countdownTimer == nil {
+                countdownTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
+                    MainActor.assumeIsolated { self?.updateCountdown() }
+                }
+            }
+        } else {
             countdownTimer?.invalidate()
             countdownTimer = nil
-            item.button?.title = ""
-            return
         }
-        item.button?.title = " " + DurationText.short(ContinuousClock.now.duration(to: endsAt))
-        item.button?.font = .monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
-        if countdownTimer == nil {
-            countdownTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
-                MainActor.assumeIsolated { self?.updateCountdown() }
-            }
+        item.button?.image = Self.menuBarImage(active: active, timeLeft: timeLeft)
+        let label = switch (active, timeLeft) {
+        case (false, _): String(localized: "Wakeful: off")
+        case (true, nil): String(localized: "Wakeful: on")
+        case (true, let timeLeft?): String(localized: "Wakeful: on, \(timeLeft) left")
         }
+        item.button?.setAccessibilityLabel(label)
+    }
+
+    /// The time left is drawn into the image, not set as the button title: a titled status
+    /// button gets 2 pt more padding at each end than an image-only one, which pushes the icon
+    /// away from its neighbors.
+    private static func menuBarImage(active: Bool, timeLeft: String?) -> NSImage? {
+        guard let glyph = NSImage(named: active ? "MenuBarActive" : "MenuBarInactive") else { return nil }
+        // 16 pt glyph on an 18 pt wide canvas, placed so the cup and handle (not the thin
+        // saucer tip) are centered. The clear sides match the inner margin of other icons.
+        let glyphSize = NSSize(width: 18, height: 16)
+        glyph.size = glyphSize
+        guard let timeLeft else { return glyph }
+
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular),
+        ]
+        let textSize = (timeLeft as NSString).size(withAttributes: attributes)
+        let gap: CGFloat = 4
+        let size = NSSize(
+            width: glyphSize.width + gap + ceil(textSize.width),
+            height: max(glyphSize.height, ceil(textSize.height)))
+        let image = NSImage(size: size, flipped: false) { _ in
+            glyph.draw(in: NSRect(origin: NSPoint(x: 0, y: (size.height - glyphSize.height) / 2), size: glyphSize))
+            (timeLeft as NSString).draw(
+                at: NSPoint(x: glyphSize.width + gap, y: (size.height - textSize.height) / 2),
+                withAttributes: attributes)
+            return true
+        }
+        image.isTemplate = true
+        return image
     }
 
     // MARK: Clicks
