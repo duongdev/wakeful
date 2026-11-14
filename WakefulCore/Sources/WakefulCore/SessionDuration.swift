@@ -12,6 +12,36 @@ public enum SessionDuration: Hashable, Codable, Sendable {
         .indefinite, .minutes(10), .minutes(30), .hours(1), .hours(2), .hours(4), .hours(8), .hours(12),
     ]
 
+    /// The time from `now` to the next `hour:minute` on the wall clock. A time that is now or
+    /// already past today means tomorrow. Counts real elapsed time, so daylight saving days are right.
+    public static func until(hour: Int, minute: Int, now: Date, calendar: Calendar = .current) -> SessionDuration? {
+        guard let end = calendar.nextDate(
+            after: now, matching: DateComponents(hour: hour, minute: minute, second: 0), matchingPolicy: .nextTime)
+        else { return nil }
+        return .seconds(now.distance(to: end))
+    }
+
+    /// Parses command-line input: `30m`, `2h`, `1.5h`, `1h30m`, `90s`, a plain number of minutes,
+    /// or `forever`/`indefinitely`. Units must come in h, m, s order. Nil for zero, invalid or too long.
+    public init?(cli text: String) {
+        let text = text.lowercased().filter { !$0.isWhitespace }
+        if ["forever", "indefinitely", "indefinite"].contains(text) {
+            self = .indefinite
+            return
+        }
+        let seconds: Double
+        if let minutes = Double(text) {
+            seconds = minutes * 60
+        } else {
+            let pattern = /(?:(\d+(?:\.\d+)?)h)?(?:(\d+(?:\.\d+)?)m)?(?:(\d+(?:\.\d+)?)s)?/
+            guard !text.isEmpty, let match = text.wholeMatch(of: pattern) else { return nil }
+            let parts = [(match.1, 3600.0), (match.2, 60.0), (match.3, 1.0)]
+            seconds = parts.reduce(0) { $0 + (Double($1.0.map(String.init) ?? "") ?? 0) * $1.1 }
+        }
+        guard seconds.isFinite, seconds > 0, seconds <= Command.maxSeconds else { return nil }
+        self = .seconds(seconds)
+    }
+
     public var timeInterval: TimeInterval? {
         if case .seconds(let s) = self { s } else { nil }
     }

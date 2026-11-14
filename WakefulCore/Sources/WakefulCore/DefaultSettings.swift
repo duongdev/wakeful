@@ -36,3 +36,12 @@ public enum SettingsKey {
     public static let notifyWhenSessionEnds = "notifyWhenSessionEnds"
     public static let showTimeLeftInMenuBar = "showTimeLeftInMenuBar"
 }
+
+/// `UserDefaults` keys the app writes so the command-line tool can read the state.
+public enum StateKey {
+    public static let isActive = "state.isActive"
+    /// Wall-clock end time. Missing while off or indefinite.
+    public static let endsAt = "state.endsAt"
+    /// When the app last wrote the state, so the tool can tell its command was handled.
+    public static let updatedAt = "state.updatedAt"
+}
