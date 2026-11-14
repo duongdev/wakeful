@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test WakefulCore
+        run: swift test --package-path WakefulCore
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Build app
+        run: |
+          xcodegen generate
+          xcodebuild -project Wakeful.xcodeproj -scheme Wakeful -configuration Debug \
+            -derivedDataPath build/DerivedData build | tail -20
