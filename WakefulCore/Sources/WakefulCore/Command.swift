@@ -33,6 +33,10 @@ public enum Command: Equatable, Sendable {
         }
     }
 
+    /// Longest accepted duration. Also keeps huge inputs (e.g. `hours=1e308`) from overflowing to infinity,
+    /// which would crash when converted to `Duration`.
+    public static let maxSeconds: Double = 999 * 3600
+
     private enum Parsed { case valid(SessionDuration?), invalid }
 
     private static func parseDuration(_ items: [URLQueryItem]) -> Parsed {
@@ -45,6 +49,6 @@ public enum Command: Equatable, Sendable {
             given = true
         }
         if !given { return .valid(nil) }
-        return seconds > 0 ? .valid(.seconds(seconds)) : .invalid
+        return seconds > 0 && seconds <= maxSeconds ? .valid(.seconds(seconds)) : .invalid
     }
 }

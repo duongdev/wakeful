@@ -27,6 +27,9 @@ struct CommandTests {
         #expect(parse("wakeful://activate?minutes=-5") == nil)
         #expect(parse("wakeful://activate?minutes=0") == nil)
         #expect(parse("wakeful://activate?hours=inf") == nil)
+        #expect(parse("wakeful://activate?hours=1e308") == nil, "overflows to infinity")
+        #expect(parse("wakeful://activate?hours=1000") == nil, "over the 999 hour cap")
+        #expect(parse("wakeful://activate?hours=999") == .activate(.hours(999)))
     }
 
     @Test func storedDurationRoundTrips() {
