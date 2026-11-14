@@ -128,6 +128,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         let custom = action(customTitle, #selector(chooseCustom))
         custom.state = isCustom ? .on : .off
         menu.addItem(custom)
+        menu.addItem(action(String(localized: "Until a Time…"), #selector(chooseUntil)))
         menu.addItem(.separator())
 
         let display = action(String(localized: "Keep Display Awake"), #selector(toggleDisplayAwake))
@@ -179,6 +180,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
     @objc private func chooseCustom() {
         if let duration = CustomDurationPrompt.run() { delegate.activate(duration) }
+    }
+
+    @objc private func chooseUntil() {
+        if let duration = CustomDurationPrompt.runUntil() { delegate.activate(duration) }
     }
 
     @objc private func toggleDisplayAwake() {

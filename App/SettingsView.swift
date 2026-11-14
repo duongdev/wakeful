@@ -1,3 +1,4 @@
+import KeyboardShortcuts
 import ServiceManagement
 import SwiftUI
 import WakefulCore
@@ -36,6 +37,7 @@ struct SettingsView: View {
             Section("General") {
                 Toggle("Launch at login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, enabled in setLaunchAtLogin(enabled) }
+                KeyboardShortcuts.Recorder("Keyboard shortcut to turn on or off", name: .toggleWakeful)
                 Toggle("Turn on when Wakeful starts", isOn: $activateAtLaunch)
                 Toggle("Left-click the icon to turn on or off", isOn: $toggleOnLeftClick)
                 if toggleOnLeftClick {
