@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-15
+
 ### Added
 
 - Menu bar app that keeps the Mac awake for a preset or custom time, or until turned off.
@@ -16,3 +18,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Optional time left next to the menu bar icon.
 - App icon and menu bar icon.
 - Automatic updates (can be turned off in Settings) and a Check for Updates menu item.
+
+[Unreleased]: https://github.com/duongdev/wakeful/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/duongdev/wakeful/releases/tag/v0.1.0
