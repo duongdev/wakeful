@@ -26,6 +26,12 @@ Shortcuts actions do not run on the ad-hoc signed Debug build ("couldn't communi
 codesign --force --deep --options runtime --sign "Apple Development" build/DerivedData/Build/Products/Debug/Wakeful.app
 ```
 
+## Translations
+
+UI text is in `App/Localizable.xcstrings`, and Siri phrases are in `App/AppShortcuts.xcstrings`. Open them in Xcode to edit. Translations other than English and Vietnamese are new and not yet checked by native speakers, so corrections are welcome. To add a language, add it in Xcode's String Catalog editor and translate every string.
+
+## Tests
+
 Run the core tests without Xcode:
 
 ```bash
