@@ -15,7 +15,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     #else
     let updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     #endif
-    private lazy var session = Session(assertion: PowerAssertion())
+    private let assertion = PowerAssertion()
+    private lazy var session = Session(assertion: assertion)
     private var statusItem: StatusItemController?
     private var powerMonitor: PowerSourceMonitor?
     private var lockMonitor: ScreenLockMonitor?
@@ -43,6 +44,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         session.isScreenLocked = ScreenLockMonitor.isLocked
         lockMonitor = ScreenLockMonitor { [weak self] locked in self?.session.isScreenLocked = locked }
+
+        // The system can drop assertions across sleep and user switches; put ours back if so.
+        let workspace = NSWorkspace.shared.notificationCenter
+        for name in [NSWorkspace.didWakeNotification, NSWorkspace.sessionDidBecomeActiveNotification] {
+            workspace.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    Log.shared.info("Checking power assertion after \(name.rawValue)")
+                    self?.assertion.ensureHeld()
+                }
+            }
+        }
 
         NotificationCenter.default.addObserver(
             forName: UserDefaults.didChangeNotification, object: defaults, queue: .main
@@ -80,13 +92,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var endsAt: ContinuousClock.Instant? { session.endsAt }
     var duration: SessionDuration? { session.duration }
 
-    func activate(_ duration: SessionDuration?) {
-        session.activate(duration ?? defaultDuration, now: .now)
+    /// `keepDisplayAwake` overrides the setting for this session only. Nil: see `Session.activate`.
+    func activate(_ duration: SessionDuration?, keepDisplayAwake: Bool? = nil) {
+        session.activate(duration ?? defaultDuration, now: .now, keepDisplayAwake: keepDisplayAwake)
     }
 
     func deactivate() { session.deactivate() }
 
-    func toggle(_ duration: SessionDuration? = nil) { session.toggle(duration ?? defaultDuration, now: .now) }
+    func toggle(_ duration: SessionDuration? = nil, keepDisplayAwake: Bool? = nil) {
+        session.toggle(duration ?? defaultDuration, now: .now, keepDisplayAwake: keepDisplayAwake)
+    }
+
+    /// Whether the display stays awake right now: the session's own choice, or else the setting.
+    var keepsDisplayAwake: Bool { session.keepsDisplayAwake }
+
+    /// From the menu: sets the setting and drops any per-session choice, so the click always has an effect.
+    func setKeepDisplayAwake(_ value: Bool) {
+        session.clearDisplayOverride()
+        defaults.set(value, forKey: SettingsKey.keepDisplayAwake)
+    }
 
     func adjust(by seconds: TimeInterval) -> Bool { session.adjust(by: seconds, now: .now) }
 

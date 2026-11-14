@@ -12,9 +12,12 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.lockBehavior) private var lockBehavior = DefaultSettings.lockBehavior
     @AppStorage(SettingsKey.dimIconWhenInactive) private var dimIconWhenInactive = DefaultSettings.dimIconWhenInactive
     @AppStorage(SettingsKey.notifyWhenSessionEnds) private var notifyWhenSessionEnds = DefaultSettings.notifyWhenSessionEnds
+    @AppStorage(SettingsKey.activeIconStyle) private var activeIconStyle = DefaultSettings.activeIconStyle
     @AppStorage(SettingsKey.showTimeLeftInMenuBar) private var showTimeLeftInMenuBar = DefaultSettings.showTimeLeftInMenuBar
     // Sparkle reads this key from user defaults; Info.plist sets the default.
     @AppStorage("SUEnableAutomaticChecks") private var automaticUpdates = true
+    @State private var language = AppLanguage.current
+    @State private var askToRestart = false
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     var body: some View {
@@ -35,6 +38,14 @@ struct SettingsView: View {
                 Toggle("Notify me when a session ends", isOn: $notifyWhenSessionEnds)
             }
             Section("General") {
+                Picker("Language", selection: $language) {
+                    Text("System Default").tag("")
+                    ForEach(AppLanguage.available, id: \.self) { Text(AppLanguage.name($0)).tag($0) }
+                }
+                .onChange(of: language) { _, code in
+                    AppLanguage.set(code)
+                    askToRestart = true
+                }
                 Toggle("Launch at login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, enabled in setLaunchAtLogin(enabled) }
                 KeyboardShortcuts.Recorder("Keyboard shortcut to turn on or off", name: .toggleWakeful)
@@ -43,6 +54,13 @@ struct SettingsView: View {
                 if toggleOnLeftClick {
                     Text("Right-click the icon to open the menu.")
                         .font(.caption).foregroundStyle(.secondary)
+                }
+                Picker("Icon when on", selection: $activeIconStyle) {
+                    Text("Standard").tag(ActiveIconStyle.standard)
+                    Text("Green").tag(ActiveIconStyle.green)
+                    Text("Blue").tag(ActiveIconStyle.blue)
+                    Text("Green Dot").tag(ActiveIconStyle.greenDot)
+                    Text("Blue Dot").tag(ActiveIconStyle.blueDot)
                 }
                 Toggle("Dim the icon when off", isOn: $dimIconWhenInactive)
                 Toggle("Show time left next to the icon", isOn: $showTimeLeftInMenuBar)
@@ -61,6 +79,10 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .alert("Restart Wakeful to use the new language.", isPresented: $askToRestart) {
+            Button("Restart Now") { AppLanguage.relaunch() }
+            Button("Later", role: .cancel) {}
+        }
         .frame(width: 440)
         .fixedSize()
     }
