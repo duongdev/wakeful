@@ -25,6 +25,7 @@
 - Choose whether the display may sleep while the Mac stays awake.
 - When the screen is locked, let the display sleep or let the Mac sleep, if you want.
 - Stop when you unplug the charger, if you want.
+- Wakeful Pro: keep the Mac awake with the lid closed and no external display, and turn on again when you plug the charger back in.
 - Start at login, start a session at launch, and get a notice when a session ends.
 - Left-click the icon to turn on or off, if you want. Right-click then opens the menu.
 - A global keyboard shortcut to turn on or off.

@@ -79,7 +79,7 @@ struct SessionTests {
     @Test func adjustPastTheEndTurnsOff() {
         let session = Session(assertion: fake)
         var reasons: [EndReason] = []
-        session.onEnd = { reasons.append($0) }
+        session.observeEnd { reasons.append($0.reason) }
         session.activate(.minutes(5), now: t0)
         #expect(session.adjust(by: -300, now: t0))
         #expect(!session.isActive)
@@ -108,7 +108,7 @@ struct SessionTests {
     @Test func expiresAndReportsReason() {
         let session = Session(assertion: fake)
         var reasons: [EndReason] = []
-        session.onEnd = { reasons.append($0) }
+        session.observeEnd { reasons.append($0.reason) }
         session.activate(.minutes(1), now: t0)
         session.update(now: t0.advanced(by: .seconds(59)))
         #expect(session.isActive)
@@ -121,7 +121,7 @@ struct SessionTests {
     @Test func toggleAndDeactivate() {
         let session = Session(assertion: fake)
         var reasons: [EndReason] = []
-        session.onEnd = { reasons.append($0) }
+        session.observeEnd { reasons.append($0.reason) }
         session.toggle(.indefinite, now: t0)
         #expect(session.isActive)
         session.toggle(.indefinite, now: t0)
@@ -166,7 +166,7 @@ struct SessionTests {
     @Test func batteryEndsSessionOnlyOnSwitchAndWhenEnabled() {
         let session = Session(assertion: fake)
         var reasons: [EndReason] = []
-        session.onEnd = { reasons.append($0) }
+        session.observeEnd { reasons.append($0.reason) }
 
         session.activate(.indefinite, now: t0)
         session.powerSourceChanged(onBattery: true)
@@ -181,5 +181,50 @@ struct SessionTests {
         session.activate(.indefinite, now: t0)
         session.powerSourceChanged(onBattery: true)
         #expect(session.isActive, "staying on battery is not a switch")
+    }
+}
+
+@MainActor
+struct SessionEndObserverTests {
+    let t0 = ContinuousClock.now
+
+    @Test func reportsTheEndedSessionOnce() {
+        let session = Session(assertion: FakeAssertion(), deactivateOnBattery: true)
+        var ended: [EndedSession] = []
+        session.observeEnd { ended.append($0) }
+        session.activate(.hours(1), now: t0, keepDisplayAwake: false)
+        session.activate(.hours(2), now: t0)
+        session.powerSourceChanged(onBattery: true)
+        session.deactivate()
+        #expect(ended == [EndedSession(
+            reason: .switchedToBattery, duration: .hours(2), endsAt: t0.advanced(by: .seconds(7200)), keepDisplayAwake: false)])
+    }
+
+    @Test func everyObserverIsCalled() {
+        let session = Session(assertion: FakeAssertion())
+        var a = 0, b = 0
+        session.observeEnd { _ in a += 1 }
+        session.observeEnd { _ in b += 1 }
+        session.activate(.indefinite, now: t0)
+        session.deactivate()
+        #expect(a == 1 && b == 1)
+    }
+}
+
+@MainActor
+struct SessionHoldObserverTests {
+    let t0 = ContinuousClock.now
+
+    @Test func reportsOnlyHoldChanges() {
+        let session = Session(assertion: FakeAssertion(), lockBehavior: .allowSleep)
+        var holds: [Bool] = []
+        session.observeHold { holds.append($0) }
+        session.activate(.indefinite, now: t0)
+        session.keepDisplayAwake.toggle()
+        session.isScreenLocked = true
+        session.isScreenLocked = false
+        session.deactivate()
+        #expect(holds == [true, false, true, false], "a kind change (display to system) is not a hold change")
+        #expect(!session.isHoldingAssertion)
     }
 }

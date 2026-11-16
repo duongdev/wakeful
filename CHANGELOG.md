@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Settings shows "Turn on again when I plug the charger in" and "Keep the Mac awake with the lid closed", locked unless Pro is unlocked. The menu shows "Keep Awake with Lid Closed" with a Pro badge. While locked, the lid-closed options (also on battery, battery level, heat) show dimmed. The lid-closed items are hidden on Macs without a lid.
+- When Wakeful is off, the first menu item turns it on for your default duration, for example "Turn On for 1 Hour".
+
+### Changed
+
+- Settings has new groups: Keep Awake, Power, Menu Bar Icon and General. The window has a fixed height and scrolls, so it fits on a small screen.
+- Settings has one Show Logs button. Copy and Reveal in Finder are in the Logs window.
+- Check for Updates is in the Help menu.
+- While Settings or Logs is open, Wakeful shows in the Dock and in Command-Tab, so you can find a window left behind others.
+
 ## [0.3.0] - 2026-11-15
 
 ### Added

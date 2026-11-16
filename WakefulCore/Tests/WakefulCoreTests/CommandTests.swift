@@ -13,6 +13,8 @@ struct CommandTests {
         #expect(parse("wakeful:activate") == .activate(nil))
         #expect(parse("WAKEFUL://Activate") == .activate(nil))
         #expect(parse("wakeful-dev://activate") == .activate(nil))
+        #expect(parse("wakeful-local://activate") == .activate(nil))
+        #expect(parse("wakefulx://activate") == nil)
         #expect(parse("other://activate") == nil)
     }
 

@@ -31,6 +31,16 @@ public enum EndReason: Equatable, Sendable {
     case switchedToBattery
 }
 
+/// What a session was when it ended.
+public struct EndedSession: Equatable, Sendable {
+    public let reason: EndReason
+    public let duration: SessionDuration
+    /// Nil for an indefinite session.
+    public let endsAt: ContinuousClock.Instant?
+    /// The session's own display choice. Nil when it followed the setting.
+    public let keepDisplayAwake: Bool?
+}
+
 /// The single source of truth for "active". All controls (menu, URL scheme, later CLI and Shortcuts) call it.
 /// Time is passed in, so the logic is pure and testable. The app calls `update(now:)` when a deadline passes.
 @MainActor
@@ -60,8 +70,12 @@ public final class Session {
 
     /// Called whenever `isActive` or `endsAt` changes.
     public var onChange: (() -> Void)?
-    /// Called once per session end.
-    public var onEnd: ((EndReason) -> Void)?
+    private var endObservers: [(EndedSession) -> Void] = []
+
+    /// Calls `handler` once per session end.
+    public func observeEnd(_ handler: @escaping (EndedSession) -> Void) {
+        endObservers.append(handler)
+    }
 
     private let assertion: AssertionHolding
     private var isOnBattery = false
@@ -91,14 +105,15 @@ public final class Session {
     }
 
     public func deactivate(_ reason: EndReason = .user) {
-        guard isActive else { return }
+        guard isActive, let current = duration else { return }
+        let ended = EndedSession(reason: reason, duration: current, endsAt: endsAt, keepDisplayAwake: displayOverride)
         isActive = false
         endsAt = nil
         duration = nil
         displayOverride = nil
         reconcile()
         onChange?()
-        onEnd?(reason)
+        endObservers.forEach { $0(ended) }
     }
 
     /// Drops this session's display choice, so the setting applies again.
@@ -145,6 +160,15 @@ public final class Session {
     }
 
     private var heldKind: AssertionKind?
+    private var holdObservers: [(Bool) -> Void] = []
+
+    /// Whether the session holds a power assertion right now.
+    public var isHoldingAssertion: Bool { heldKind != nil }
+
+    /// Calls `handler` when the session starts or stops holding a power assertion.
+    public func observeHold(_ handler: @escaping (Bool) -> Void) {
+        holdObservers.append(handler)
+    }
 
     /// Brings the held assertion in line with the state. Touches the assertion only when the needed kind changes.
     private func reconcile() {
@@ -160,7 +184,9 @@ public final class Session {
                 }
             }
         guard needed != heldKind else { return }
+        let wasHolding = isHoldingAssertion
         heldKind = needed
         assertion.set(needed)
+        if wasHolding != isHoldingAssertion { holdObservers.forEach { $0(isHoldingAssertion) } }
     }
 }

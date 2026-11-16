@@ -151,7 +151,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.addItem(.sectionHeader(title: "Wakeful Dev"))
         #endif
         menu.addItem(.sectionHeader(title: statusText()))
-        if active { menu.addItem(action(String(localized: "Turn Off"), #selector(turnOff))) }
+        menu.addItem(active ? action(String(localized: "Turn Off"), #selector(turnOff)) : turnOnItem())
         menu.addItem(.separator())
 
         menu.addItem(.sectionHeader(title: active ? String(localized: "Change Duration") : String(localized: "Keep Awake")))
@@ -175,15 +175,23 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         let display = action(String(localized: "Keep Display Awake"), #selector(toggleDisplayAwake))
         display.state = delegate.keepsDisplayAwake ? .on : .off
         menu.addItem(display)
+        if Hardware.hasLid {
+            let lid = action(String(localized: "Keep Awake with Lid Closed"), #selector(toggleLidClosedMode))
+            if delegate.unlockedFeatures.contains(.lidClosedMode) {
+                lid.state = defaults.bool(forKey: SettingsKey.lidClosedMode) ? .on : .off
+            } else {
+                lid.action = nil
+                lid.badge = NSMenuItemBadge(string: "Pro")
+            }
+            menu.addItem(lid)
+        }
         menu.addItem(.separator())
 
         menu.addItem(action(String(localized: "Settings…"), #selector(openSettings), key: ","))
-        let updates = NSMenuItem(title: String(localized: "Check for Updates…"), action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)), keyEquivalent: "")
-        updates.target = delegate.updater
-        menu.addItem(updates)
         let help = NSMenuItem(title: String(localized: "Help"), action: nil, keyEquivalent: "")
         help.submenu = helpMenu()
         menu.addItem(help)
+        delegate.addExtensionMenuItems(to: menu)
         menu.addItem(.separator())
         menu.addItem(action(String(localized: "Quit Wakeful"), #selector(quit), key: "q"))
     }
@@ -191,11 +199,23 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private func helpMenu() -> NSMenu {
         let help = NSMenu()
         help.addItem(action(String(localized: "About Wakeful"), #selector(about)))
+        let updates = NSMenuItem(title: String(localized: "Check for Updates…"), action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)), keyEquivalent: "")
+        updates.target = delegate.updater
+        help.addItem(updates)
         help.addItem(action(String(localized: "Release Notes"), #selector(releaseNotes)))
         help.addItem(action(String(localized: "URL Scheme Help"), #selector(urlSchemeHelp)))
         help.addItem(.separator())
         help.addItem(action(String(localized: "Report a Bug…"), #selector(reportBug)))
         return help
+    }
+
+    /// Turns on with the default duration, so the most common action is one click.
+    private func turnOnItem() -> NSMenuItem {
+        let duration = delegate.defaultDuration
+        let title = duration == .indefinite
+            ? String(localized: "Turn On Indefinitely")
+            : String(localized: "Turn On for \(DurationText.label(duration))")
+        return action(title, #selector(turnOn))
     }
 
     private func statusText() -> String {
@@ -211,6 +231,8 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     }
 
     // MARK: Actions
+
+    @objc private func turnOn() { delegate.activate(nil) }
 
     @objc private func turnOff() { delegate.deactivate() }
 
@@ -229,6 +251,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
     @objc private func toggleDisplayAwake() {
         delegate.setKeepDisplayAwake(!delegate.keepsDisplayAwake)
+    }
+
+    @objc private func toggleLidClosedMode() {
+        defaults.set(!defaults.bool(forKey: SettingsKey.lidClosedMode), forKey: SettingsKey.lidClosedMode)
     }
 
     @objc private func openSettings() { WindowPresenter.shared.showSettings() }

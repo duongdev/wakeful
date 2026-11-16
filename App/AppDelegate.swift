@@ -22,6 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var lockMonitor: ScreenLockMonitor?
     private var deadlineTask: Task<Void, Never>?
     private var napGuard: NSObjectProtocol?
+    private let wakefulExtension = Extensions.load()
 
     override init() {
         super.init()
@@ -35,7 +36,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         defaults.register(defaults: DefaultSettings.registration)
         applySettings()
         session.onChange = { [weak self] in self?.sessionChanged() }
-        session.onEnd = { [weak self] reason in self?.sessionEnded(reason) }
+        session.observeEnd { [weak self] ended in self?.sessionEnded(ended.reason) }
+        if let wakefulExtension {
+            Log.shared.info("Extension loaded, unlocked: \(wakefulExtension.unlockedFeatures.map(\.rawValue).sorted())")
+            wakefulExtension.start(session: session)
+        }
 
         session.powerSourceChanged(onBattery: PowerSourceMonitor.isOnBattery)
         powerMonitor = PowerSourceMonitor { [weak self] onBattery in
@@ -91,6 +96,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var isActive: Bool { session.isActive }
     var endsAt: ContinuousClock.Instant? { session.endsAt }
     var duration: SessionDuration? { session.duration }
+    var unlockedFeatures: Set<ProFeature> { wakefulExtension?.unlockedFeatures ?? [] }
+
+    func addExtensionMenuItems(to menu: NSMenu) { wakefulExtension?.addMenuItems(to: menu) }
 
     /// `keepDisplayAwake` overrides the setting for this session only. Nil: see `Session.activate`.
     func activate(_ duration: SessionDuration?, keepDisplayAwake: Bool? = nil) {
